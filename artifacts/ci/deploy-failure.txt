@@ -1,0 +1,68 @@
+╔═══════════════════════════════════════════════════════════════════╗
+║            GitHub Actions - Deploy to Production                  ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+Repository: acme/faulty-app-demo
+Workflow: Deploy to Production
+Run: #1247
+Branch: main
+Commit: a3f7d92 "Add payment_processor_v2 integration"
+Triggered by: @jane.doe
+Status: ❌ FAILED
+
+────────────────────────────────────────────────────────────────────
+Job: deploy-production
+────────────────────────────────────────────────────────────────────
+
+Step: Build Docker Image
+✓ Completed in 2m 34s
+
+Step: Push to Registry
+✓ Completed in 1m 12s
+
+Step: Deploy to Kubernetes
+✓ Deployment created: faulty-app-demo-v2.5.0
+✓ Rolling update started: 0/5 pods ready
+
+Step: Health Check
+⏱ Waiting for pods to be ready...
+⏱ Pod faulty-app-demo-v2.5.0-7d8f9 ... CrashLoopBackOff
+⏱ Pod faulty-app-demo-v2.5.0-8e9g0 ... CrashLoopBackOff
+⏱ Pod faulty-app-demo-v2.5.0-9f0h1 ... CrashLoopBackOff
+
+────────────────────────────────────────────────────────────────────
+Pod Logs (faulty-app-demo-v2.5.0-7d8f9)
+────────────────────────────────────────────────────────────────────
+{"timestamp": "2026-09-20T21:45:12.123Z", "level": "INFO", "service": "faulty-app-demo", "message": "Service starting", "version": "1.0.0", "fault_mode": "none", "port": 8000}
+{"timestamp": "2026-09-20T21:45:14.456Z", "level": "ERROR", "service": "faulty-app-demo", "message": "Failed to load required module", "module_name": "payment_processor_v2", "error": "ModuleNotFoundError: No module named 'payment_processor_v2'", "python_path": "/app:/app/lib:/usr/local/lib/python3.11"}
+{"timestamp": "2026-09-20T21:45:14.457Z", "level": "FATAL", "service": "faulty-app-demo", "message": "Critical startup dependency missing - terminating", "exit_code": 1, "deployment_version": "v2.5.0", "previous_version": "v2.4.9"}
+
+Container exited with code 1
+
+────────────────────────────────────────────────────────────────────
+Deployment Status
+────────────────────────────────────────────────────────────────────
+✗ Deployment failed: Pods are crash-looping
+✗ Health check timeout after 5 minutes
+✗ 0 out of 5 pods are ready
+✗ Current traffic still served by: v2.4.9 (previous version)
+
+────────────────────────────────────────────────────────────────────
+Recommended Actions
+────────────────────────────────────────────────────────────────────
+1. Check for missing dependencies in requirements.txt
+2. Verify payment_processor_v2 module is properly packaged
+3. Review commit a3f7d92 for breaking changes
+4. Consider rolling back to v2.4.9
+5. Run deployment in staging environment first
+
+────────────────────────────────────────────────────────────────────
+Error Summary
+────────────────────────────────────────────────────────────────────
+The deployment failed because the application cannot start. It's
+attempting to import 'payment_processor_v2' which is not installed
+or available in the container image.
+
+This appears to be a missing dependency issue introduced in commit
+a3f7d92. The previous version v2.4.9 is stable and still serving
+production traffic.
