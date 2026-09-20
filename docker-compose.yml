@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  faulty-app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - ADMIN_TOKEN=demo-secret-token
+      - FAULT_MODE=${FAULT_MODE:-none}
+    restart: unless-stopped
