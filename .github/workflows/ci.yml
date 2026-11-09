@@ -9,8 +9,8 @@ jobs:
   unit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - run: pip install pyyaml==6.0.2
@@ -25,14 +25,15 @@ jobs:
     needs: unit
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install kind
         run: |
-          curl -sSLo kind https://kind.sigs.k8s.io/dl/v0.27.0/kind-linux-amd64
+          curl -fsSL --retry 5 --retry-all-errors -o kind \
+            https://github.com/kubernetes-sigs/kind/releases/download/v0.27.0/kind-linux-amd64
           chmod +x kind && sudo mv kind /usr/local/bin/kind
           kind version
       - name: Break, observe, heal
         run: lab/lab.sh e2e
       - name: Cluster state on failure
         if: failure()
-        run: lab/lab.sh status
+        run: lab/lab.sh status || true
