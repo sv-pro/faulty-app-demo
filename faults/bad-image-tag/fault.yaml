@@ -1,0 +1,15 @@
+id: bad-image-tag
+title: A release points at an image tag that does not exist
+layer: Deployment
+changes:
+  - Deployment/orders:spec.template.spec.containers[0].image
+symptoms:
+  - A new ReplicaSet appears; its Pod stays in ErrImagePull / ImagePullBackOff.
+  - kubectl rollout status does not finish; after 60 s the Deployment reports ProgressDeadlineExceeded.
+  - The two old Pods keep serving, so requests to http://orders-api still succeed.
+root_cause: >-
+  The Pod template image is faulty-app:does-not-exist; no registry has it, so the
+  new Pod never starts, and maxUnavailable=0 keeps the old Pods in service.
+fix: Roll back (kubectl rollout undo deployment/orders) or apply the base again.
+signal: image-pull-failed
+service_available: true

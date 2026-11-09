@@ -1,0 +1,15 @@
+id: readiness-probe
+title: The readiness probe asks for an endpoint the app does not have
+layer: Deployment
+changes:
+  - Deployment/orders:spec.template.spec.containers[0].readinessProbe.httpGet.path
+symptoms:
+  - The new Pod is Running but never Ready (0/1), and it is not restarted.
+  - 'Events show "Readiness probe failed: HTTP probe failed with statuscode: 404".'
+  - The rollout stalls; the old Pods keep serving.
+root_cause: >-
+  readinessProbe.httpGet.path is /ready; the app serves /readyz and answers 404,
+  so the kubelet never marks the container Ready. Liveness still passes.
+fix: Restore the path to /readyz (kubectl apply -k k8s/base).
+signal: readiness-failed
+service_available: true

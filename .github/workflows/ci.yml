@@ -1,0 +1,38 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml==6.0.2
+      - name: Unit and overlay tests (kubectl kustomize renders every fault)
+        run: |
+          kubectl version --client
+          python -m unittest discover -s tests -v
+
+  e2e:
+    # Every fault on a real cluster: break it, observe the symptom, heal, check.
+    runs-on: ubuntu-latest
+    needs: unit
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install kind
+        run: |
+          curl -sSLo kind https://kind.sigs.k8s.io/dl/v0.27.0/kind-linux-amd64
+          chmod +x kind && sudo mv kind /usr/local/bin/kind
+          kind version
+      - name: Break, observe, heal
+        run: lab/lab.sh e2e
+      - name: Cluster state on failure
+        if: failure()
+        run: lab/lab.sh status

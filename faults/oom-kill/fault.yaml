@@ -1,0 +1,18 @@
+id: oom-kill
+title: A release preloads a cache bigger than its memory limit
+layer: Deployment
+changes:
+  - Deployment/orders:spec.template.spec.containers[0].env[1].name
+  - Deployment/orders:spec.template.spec.containers[0].env[1].value
+symptoms:
+  - The new Pod restarts again and again and goes to CrashLoopBackOff.
+  - Its last state is Terminated with reason OOMKilled, exit code 137.
+  - The rollout stalls; the old Pods keep serving.
+root_cause: >-
+  CACHE_WARMUP_MB=200 makes the app allocate 200 MiB at start, above the
+  container's 128Mi memory limit, so the kernel kills it.
+fix: >-
+  Remove CACHE_WARMUP_MB (kubectl apply -k k8s/base), or raise limits.memory above
+  what the release really needs.
+signal: oom-killed
+service_available: true

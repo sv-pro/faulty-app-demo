@@ -1,0 +1,15 @@
+id: wrong-selector
+title: The Service selects no Pods
+layer: Service
+changes:
+  - Service/orders-api:spec.selector.app
+symptoms:
+  - Deployment orders is Available, both Pods are Running and Ready.
+  - The EndpointSlice of Service orders-api has no endpoints.
+  - Requests to http://orders-api fail with connection refused.
+root_cause: >-
+  spec.selector of Service orders-api is app=orderz; the Pods carry app=orders,
+  so the Service matches nothing.
+fix: Restore the selector to app=orders (kubectl apply -k k8s/base).
+signal: endpoints-empty
+service_available: false
